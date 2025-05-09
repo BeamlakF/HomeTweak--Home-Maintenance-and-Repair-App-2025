@@ -29,7 +29,7 @@ fun SignUpScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    val roleOptions = listOf("Customer", "Service Provider")
+    val roleOptions = listOf("User", "Service Provider")
     var selectedRole by remember { mutableStateOf("") }
 
 

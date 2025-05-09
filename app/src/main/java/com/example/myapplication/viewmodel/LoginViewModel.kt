@@ -2,8 +2,6 @@ package com.example.myapplication.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.myapplication.data.remote.model.LoginRequest
-import com.example.myapplication.data.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,8 +19,6 @@ class LoginViewModel : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
 
-    private val repository = AuthRepository()
-
     fun onEmailChange(newEmail: String) {
         _uiState.value = _uiState.value.copy(email = newEmail)
     }
@@ -35,31 +31,22 @@ class LoginViewModel : ViewModel() {
         val state = _uiState.value
 
         if (state.email.isBlank() || state.password.isBlank()) {
-            _uiState.value = state.copy(errorMessage = "Please fill in both fields.")
+            _uiState.value = state.copy(errorMessage = "Please enter both email and password")
             return
         }
 
         _uiState.value = state.copy(isLoading = true, errorMessage = null)
 
         viewModelScope.launch {
-            val request = LoginRequest(
-                email = state.email,
-                password = state.password
+            // Simulate backend login call
+            kotlinx.coroutines.delay(1500)
+
+            // Simulated success
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                success = true,
+                errorMessage = null
             )
-
-            val result = repository.login(request)
-
-            result.onSuccess {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    success = true
-                )
-            }.onFailure { error ->
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = error.localizedMessage ?: "Login failed"
-                )
-            }
         }
     }
 }
