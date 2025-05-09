@@ -14,10 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,15 +36,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.model.Booking
-import com.example.myapplication.ui.components.BookingCard
+import com.example.myapplication.ui.components.ActiveBookingCard
+import com.example.myapplication.ui.components.CompletedBookingCard
+import com.example.myapplication.ui.components.PendingBookingCard
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.viewmodel.BookingViewModel
+import com.example.myapplication.viewmodel.BookingViewModel.Companion.provideFactory
+import androidx.compose.runtime.collectAsState
+import com.example.myapplication.data.FakeBookingRepo
+import com.example.myapplication.viewmodel.BookingActionState
 
 @Composable
-fun MyBookingsScreenStaticPreview() {
+fun MyBookingsScreen() {
+    val repository = FakeBookingRepo()
+    val bookingViewModel: BookingViewModel = viewModel(factory = provideFactory(repository))
+
+    val profilePicture by bookingViewModel.profilePicture.collectAsState()
+    val displayedBookings by bookingViewModel.displayedBookings.collectAsState()
+    val currentTab by bookingViewModel.currentTab.collectAsState()
+    val bookingActionState by bookingViewModel.bookingActionState.collectAsState(initial = null)
+
+    var showCancellationDialog by remember { mutableStateOf(false) }
+    var cancelledBookingId by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(30.dp)
-            .background(Color(0xFFFFF9F5))
+            .padding(horizontal =8.dp,vertical = 18.dp)
+            .background(Color(0xFFFFF9F5)),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Header Section
         Row(
@@ -71,34 +96,66 @@ fun MyBookingsScreenStaticPreview() {
         // Tabs Section
         Row(
             modifier = Modifier
-                .fillMaxWidth(0.8f)
+                .fillMaxWidth()
                 .background(Color(0xFFFFF9F5)),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            var selectedTab by remember { mutableStateOf("Active") }
-            TabItem("Active", isSelected = selectedTab == "Active") { selectedTab = "Active" }
-            TabItem("Pending", isSelected = selectedTab == "Pending") { selectedTab = "Pending" }
-            TabItem("Completed", isSelected = selectedTab == "Completed") { selectedTab = "Completed" }
+            TabItem(
+                "Active",
+                isSelected = currentTab == Booking.BookingStatus.ACTIVE,
+                onTabClick = { bookingViewModel.onTabSelected(Booking.BookingStatus.ACTIVE) }
+            )
+            TabItem(
+                "Pending",
+                isSelected = currentTab == Booking.BookingStatus.PENDING,
+                onTabClick = { bookingViewModel.onTabSelected(Booking.BookingStatus.PENDING) }
+            )
+            TabItem(
+                "Completed",
+                isSelected = currentTab == Booking.BookingStatus.COMPLETED,
+                onTabClick = { bookingViewModel.onTabSelected(Booking.BookingStatus.COMPLETED) }
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-        val sampleBooking = Booking(
-            id = "preview1",
-            customerId = "01",
-            providerId = "30",
-            serviceType = "Appliance Repair",
-            serviceProvider = "Selam Worku",
-            price = "600 Birr",
-            dateTime = "May 10, 2025",
-            status = Booking.BookingStatus.ACTIVE
-        )
-        BookingCard(
-            booking = sampleBooking,
-            onRescheduleClick = { booking ->
-                println("Reschedule clicked for: ${booking.serviceType}")
-            },
-            onCancelClick = { booking ->
-                println("Cancel clicked for: ${booking.serviceType}")})
+
+        // Booking List
+        LazyColumn {
+            items(displayedBookings) { booking ->
+                when (booking.status) {
+                    Booking.BookingStatus.ACTIVE -> ActiveBookingCard(
+                        booking = booking,
+                        onRescheduleClick = { /* TODO: Implement Reschedule */ },
+                        onCancelClick = { bookingViewModel.cancelBooking(booking.id) }
+                    )
+                    Booking.BookingStatus.PENDING -> PendingBookingCard(
+                        booking = booking,
+                        onCancelClick = { bookingViewModel.cancelBooking(booking.id) }
+                    )
+                    Booking.BookingStatus.COMPLETED -> CompletedBookingCard(booking = booking)
+                }
+            }
+        }
+        LaunchedEffect(Unit) {
+            println("Displayed Bookings in UI: $displayedBookings")
+        }
+
+
+        // Handle Cancellation Dialog
+        LaunchedEffect(bookingActionState) {
+            when (val state = bookingActionState) {
+                is BookingActionState.BookingCancelled -> {
+                    cancelledBookingId = state.bookingId
+                    showCancellationDialog = true
+                }
+                is BookingActionState.Error -> {
+                    // Handle error (e.g., show Snackbar)
+                    println("Error: ${state.message}")
+                }
+                else -> {}
+            }
+            bookingViewModel.resetBookingActionState()
+        }
     }
 }
 
@@ -126,4 +183,5 @@ fun TabItem(title: String, isSelected: Boolean, onTabClick: (String) -> Unit) {
             )
         }
     }
+
 }
