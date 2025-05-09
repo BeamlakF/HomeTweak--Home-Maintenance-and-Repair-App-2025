@@ -1,5 +1,4 @@
-package com.example.myapplication.ui.customer
-
+// BookingRepository.kt
 package com.example.hometweak
 
 import androidx.compose.runtime.mutableStateListOf
@@ -12,6 +11,8 @@ object BookingRepository {
         _activeBookings.add(booking)
     }
 }
+
+// Also move these data classes to the same file or a Models.kt file
 
 
 
