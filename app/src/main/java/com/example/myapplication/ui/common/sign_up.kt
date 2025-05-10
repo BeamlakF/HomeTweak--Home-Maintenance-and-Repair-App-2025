@@ -6,7 +6,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -18,20 +19,26 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import com.example.myapplication.data.remote.model.SignUpRequest
+import com.example.myapplication.utils.AuthManager
+import com.example.myapplication.viewmodel.SignupViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignUpScreen(
-    onSignInClick: () -> Unit
+    onSignInClick: () -> Unit,
+    viewModel: SignupViewModel = viewModel()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    val roleOptions = listOf("Customer", "Service Provider")
+    val roleOptions = listOf("customer", "serviceProvider")
     var selectedRole by remember { mutableStateOf("") }
-
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var successMessage by remember { mutableStateOf<String?>(null) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -65,16 +72,14 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(32.dp))
             Text("Create new account", style = MaterialTheme.typography.headlineSmall.copy(
                 color = Color(0xFF4F5255)
-            ),)
+            ))
 
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("Enter your email", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255)
-                ),) },
+                placeholder = { Text("Enter your email", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
                 leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email Icon", tint = Color(0xFF4F5255)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
@@ -90,9 +95,7 @@ fun SignUpScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("Enter your password", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255)
-                ),) },
+                placeholder = { Text("Enter your password", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
                 leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = "Lock Icon", tint = Color(0xFF4F5255)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
@@ -106,7 +109,6 @@ fun SignUpScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-
             ExposedDropdownMenuBox(
                 expanded = expanded,
                 onExpandedChange = { expanded = !expanded }
@@ -115,9 +117,8 @@ fun SignUpScreen(
                     value = selectedRole,
                     onValueChange = {},
                     readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)},
-                    placeholder = { Text("Select your role", style = MaterialTheme.typography.headlineSmall.copy(
-                        color = Color(0xFF4F5255))) },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    placeholder = { Text("Select your role", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
                     modifier = Modifier
                         .fillMaxWidth()
                         .menuAnchor(),
@@ -136,8 +137,7 @@ fun SignUpScreen(
                 ) {
                     roleOptions.forEach { role ->
                         DropdownMenuItem(
-                            text = { Text(role, style = MaterialTheme.typography.headlineSmall.copy(
-                                color = Color(0xFF4F5255))) },
+                            text = { Text(role, style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
                             onClick = {
                                 selectedRole = role
                                 expanded = false
@@ -150,7 +150,18 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { /* Sign up logic */ },
+                onClick = {
+                    coroutineScope.launch {
+                        val result = viewModel.signUp(SignUpRequest(email, password, selectedRole))
+                        result.onSuccess {
+                            successMessage = it.message
+                            errorMessage = null
+                        }.onFailure {
+                            errorMessage = it.localizedMessage ?: "Sign up failed"
+                            successMessage = null
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B00)),
                 shape = RoundedCornerShape(40),
                 modifier = Modifier
@@ -160,13 +171,14 @@ fun SignUpScreen(
                 Text("Sign Up", fontSize = 28.sp, color = Color.White)
             }
 
+            Spacer(modifier = Modifier.height(16.dp))
+            errorMessage?.let { Text(it, color = Color.Red) }
+            successMessage?.let { Text(it, color = Color.Green) }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Row {
-                Text("Already have an account?", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255),
-                    fontSize = 16.sp
-                ),)
+                Text("Already have an account?", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255), fontSize = 16.sp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     "Sign in",
