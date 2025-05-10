@@ -24,4 +24,13 @@ class AuthRepository {
             Result.failure(e)
         }
     }
+
+    suspend fun resetPassword(request: ResetPasswordRequest): Result<ResetPasswordResponse> {
+        return try {
+            val response = authApi.resetPassword(request)
+            Result.success(response)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

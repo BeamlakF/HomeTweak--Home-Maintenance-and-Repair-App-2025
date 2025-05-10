@@ -13,20 +13,31 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.data.remote.model.LoginRequest
+import com.example.myapplication.utils.AuthManager
+import com.example.myapplication.viewmodel.LoginViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun LoginScreen(
     onSignUpClick: () -> Unit,
+    onForgotPasswordClick: () -> Unit,
+    viewModel: LoginViewModel = viewModel()
 ) {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var rememberMe by remember { mutableStateOf(true) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -61,16 +72,14 @@ fun LoginScreen(
 
             Text("Sign in to your account via email", style = MaterialTheme.typography.headlineSmall.copy(
                 color = Color(0xFF4F5255)
-            ),)
+            ))
 
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                placeholder = { Text("Enter your email", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255)
-                ),) },
+                placeholder = { Text("Enter your email", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
                 leadingIcon = { Icon(imageVector = Icons.Default.Email, contentDescription = "Email Icon", tint = Color(0xFF4F5255)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
@@ -78,19 +87,16 @@ fun LoginScreen(
                     unfocusedBorderColor = Color.Transparent,
                     focusedBorderColor = Color.Transparent,
                     unfocusedContainerColor = Color(0xFFFFF1E8)
-                ),
-
                 )
+            )
 
             Spacer(modifier = Modifier.height(24.dp))
 
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                placeholder = { Text("Enter your password", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255)
-                ),) },
-                leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = "Password Icon", tint = Color(0xFF4F5255))},
+                placeholder = { Text("Enter your password", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255))) },
+                leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = "Password Icon", tint = Color(0xFF4F5255)) },
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(4.dp),
                 visualTransformation = PasswordVisualTransformation(),
@@ -127,26 +133,28 @@ fun LoginScreen(
                     )
                 }
 
-                // Temporary click handler
                 Text(
                     text = "Forgot password?",
                     color = Color(0xFF4F5255),
                     fontSize = 18.sp,
-                    modifier = Modifier.clickable {
-                        val context = null
-                        Toast.makeText(
-                            context,
-                            "Forgot password feature coming soon",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    modifier = Modifier.clickable { onForgotPasswordClick() }
                 )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
             Button(
-                onClick = { /* Login logic here */ },
+                onClick = {
+                    coroutineScope.launch {
+                        val result = viewModel.login(LoginRequest(email, password))
+                        result.onSuccess {
+                            AuthManager.token = it.token
+                            Toast.makeText(context, "Login successful", Toast.LENGTH_SHORT).show()
+                        }.onFailure {
+                            errorMessage = it.localizedMessage ?: "Login failed"
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B00)),
                 shape = RoundedCornerShape(40),
                 modifier = Modifier
@@ -156,13 +164,15 @@ fun LoginScreen(
                 Text("Login", fontSize = 28.sp, color = Color.White)
             }
 
+            errorMessage?.let {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(it, color = Color.Red)
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             Row {
-                Text("Not a member?", style = MaterialTheme.typography.headlineSmall.copy(
-                    color = Color(0xFF4F5255),
-                    fontSize = 16.sp
-                ),)
+                Text("Not a member?", style = MaterialTheme.typography.headlineSmall.copy(color = Color(0xFF4F5255), fontSize = 16.sp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
                     "Create new account",
@@ -175,7 +185,3 @@ fun LoginScreen(
         }
     }
 }
-
-
-
-
