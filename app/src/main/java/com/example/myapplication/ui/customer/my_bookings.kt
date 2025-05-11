@@ -41,7 +41,7 @@ fun MyBookingsScreen() {
             .background(LightBackground)
             .padding(16.dp)
     ) {
-        // Header
+    
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -61,7 +61,7 @@ fun MyBookingsScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Tabs
+        
         TabRow(
             selectedTabIndex = selectedTab.ordinal,
             containerColor = Color.Transparent,
@@ -90,7 +90,7 @@ fun MyBookingsScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Content based on selected tab
+        
         when (selectedTab) {
             BookingStatus.ACTIVE -> ActiveBookings(
                 onBookingClick = { booking ->
@@ -112,7 +112,7 @@ fun MyBookingsScreen() {
             )
         }
 
-        // Details Dialog
+        
         if (showDialog && currentBooking != null) {
             when (selectedTab) {
                 BookingStatus.ACTIVE -> ActiveBookingDetailsDialog(
@@ -364,7 +364,7 @@ fun PendingBookingDetailsDialog(booking: Booking, onDismiss: () -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { /* Handle approve */ },
+                onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2196F3)
                 ),
@@ -375,7 +375,7 @@ fun PendingBookingDetailsDialog(booking: Booking, onDismiss: () -> Unit) {
         },
         dismissButton = {
             Button(
-                onClick = { /* Handle cancel */ },
+                onClick = { },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFFF44336)
                 ),
@@ -415,7 +415,7 @@ fun CompletedBookingDetailsDialog(booking: Booking, onDismiss: () -> Unit) {
         },
         confirmButton = {
             Button(
-                onClick = { /* Handle review */ },
+                onClick = {  },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF9C27B0)
                 ),
