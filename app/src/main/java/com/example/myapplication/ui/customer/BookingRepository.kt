@@ -1,4 +1,4 @@
-// BookingRepository.kt
+
 package com.example.hometweak
 
 import androidx.compose.runtime.mutableStateListOf
@@ -12,12 +12,11 @@ object BookingRepository {
     }
 }
 
-// Also move these data classes to the same file or a Models.kt file
 
 
 
 data class Booking(
-    val id: String = "", // Consider adding unique ID
+    val id: String = "", 
     val serviceName: String,
     val providerName: String,
     val dateTime: String,
