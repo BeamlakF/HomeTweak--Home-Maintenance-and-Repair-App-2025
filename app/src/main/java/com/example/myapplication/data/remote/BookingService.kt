@@ -24,7 +24,7 @@ interface BookingService {
         @Body statusRequest: BookingStatusRequest
     ): Call<Booking>
 
-    // Optional: Only if you have this backend API for single booking
+
     @GET("bookings/{id}")
     fun getBookingById(@Path("id") bookingId: Int): Call<Booking>
 }
