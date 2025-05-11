@@ -16,7 +16,7 @@ object BookingRepository {
 
 
 data class Booking(
-    val id: String = "", // Consider adding unique ID
+    val id: String = "", 
     val serviceName: String,
     val providerName: String,
     val dateTime: String,
