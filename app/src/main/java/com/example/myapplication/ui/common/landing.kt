@@ -64,13 +64,13 @@ fun LandingPage(navController: NavHostController) {
             style = MaterialTheme.typography.titleLarge
         )
 
-        Image(
-            painter = painterResource(id = R.drawable.plumber_flat_composition),
-            contentDescription = null,
-            modifier = Modifier
-                .fillMaxWidth()
-                .size(300.dp)
-        )
+//        Image(
+//            painter = painterResource(id = R.drawable.plumber_flat_composition),
+//            contentDescription = null,
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .size(300.dp)
+//        )
 
         Spacer(modifier = Modifier.height(10.dp))
 
