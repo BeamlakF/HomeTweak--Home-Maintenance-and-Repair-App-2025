@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.components
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,6 +38,8 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 
@@ -45,6 +48,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.viewmodel.BookingViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.navigation.NavHostController
+import com.example.myapplication.ui.navigation.Routes
+import com.example.myapplication.ui.theme.CardColor
+import com.example.myapplication.ui.theme.SafetyOrange
+import com.example.myapplication.ui.theme.OffWhite
 
 
 
@@ -54,6 +72,8 @@ fun ActiveBookingCard( // customer booking card active
     onRescheduleClick: (Booking) -> Unit,
     onCancelClick: (Booking) -> Unit
 ) {
+    var showRescheduleCard by remember { mutableStateOf(false) } // Added state to manage the visibility of RescheduleInputCard
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -146,7 +166,7 @@ fun ActiveBookingCard( // customer booking card active
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = { onRescheduleClick(booking) },
+                    onClick = { showRescheduleCard = true },
                     shape = RoundedCornerShape(8.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color(0xFFFF6700),
@@ -154,7 +174,7 @@ fun ActiveBookingCard( // customer booking card active
                     ),
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("Reschedule")
+                    Text("Reschedule", fontSize = 14.sp)
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 Button(
@@ -170,6 +190,16 @@ fun ActiveBookingCard( // customer booking card active
                 }
             }
         }
+        if (showRescheduleCard) { // Added conditional to display RescheduleInputCard when `showRescheduleCard` is true
+            RescheduleInputCard(
+                onDismiss = { showRescheduleCard = false }, // Added to hide the card on dismiss
+                onConfirm = { newTime, location -> // Added to handle confirmation
+                    showRescheduleCard = false
+                    onRescheduleClick(booking.copy(dateTime = newTime, serviceProvider = location)) // Updated booking with new time and location
+                }
+            )
+        }
+
     }
 }
 
@@ -680,6 +710,233 @@ fun CompleteDashboardCard(
                     style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
                     color = Color(0xFF2E7D32), // Green color
                     modifier = Modifier.fillMaxWidth().wrapContentWidth(Alignment.End)
+                )
+            }
+        }
+    }
+}
+
+//for the booking and rescheduling
+@Composable
+fun BookingInputCard(
+    onDismiss: () -> Unit,
+    onConfirm: (date: String, time: String, location: String) -> Unit
+) {
+    var date by remember { mutableStateOf("") }
+    var time by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEEE3)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Book a New Appointment", style = MaterialTheme.typography.titleLarge, color = Color(0xFF04285E))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = date,
+                onValueChange = { date = it },
+                label = { Text("Date", color = Color(0xFF4F5255)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = time,
+                onValueChange = { time = it },
+                label = { Text("Time", color = Color(0xFF4F5255)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text("Location", color = Color(0xFF4F5255)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(onClick = onDismiss) {
+                    Text("Cancel", color = Color(0xFFff6700))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = { onConfirm(date, time, location) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFff6700))) {
+                    Text("Book", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun RescheduleInputCard(
+    onDismiss: () -> Unit,
+    onConfirm: (newTime: String, location: String) -> Unit
+) {
+    var newTime by remember { mutableStateOf("") }
+    var location by remember { mutableStateOf("") }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEEE3)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Reschedule Booking", style = MaterialTheme.typography.titleLarge, color = Color(0xFF04285E))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = newTime,
+                onValueChange = { newTime = it },
+                label = { Text("New Time", color = Color(0xFF4F5255)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text("New Location", color = Color(0xFF4F5255)) },
+                modifier = Modifier.fillMaxWidth()
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.End,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(onClick = onDismiss) {
+                    Text("Cancel", color = Color(0xFFff6700))
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Button(onClick = { onConfirm(newTime, location) }, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFff6700))) {
+                    Text("Update Booking", color = Color.White)
+                }
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun BookingInputCardPreview() {
+    BookingInputCard(
+        onDismiss = {},
+        onConfirm = { _, _, _ -> }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun RescheduleInputCardPreview() {
+    RescheduleInputCard(
+        onDismiss = {},
+        onConfirm = { _, _ -> }
+    )
+}
+
+//card on signup
+@Composable
+fun SignUpSectionCard(
+    title: String,
+    fields: List<Triple<String, String, (String) -> Unit>>,
+    expanded: Boolean,
+    onExpandToggle: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .animateContentSize(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(onClick = onExpandToggle) {
+                    Icon(
+                        imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = null
+                    )
+                }
+            }
+            if (expanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                for ((label, value, onValueChange) in fields) {
+                    OutlinedTextField(
+                        value = value,
+                        onValueChange = onValueChange,
+                        label = {
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodySmall // Adjusted this to correctly apply style
+                            )
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        colors = TextFieldDefaults.colors(),
+                        shape = MaterialTheme.shapes.medium
+                    )
+                }
+            }
+        }
+    }
+}
+@Composable
+fun FooterSection(navController: NavHostController) {
+    Surface(
+        color = CardColor,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxSize(),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            IconButton(onClick = { navController.navigate(Routes.CUSTOMER_HOME) }) {
+                Icon(
+                    imageVector = Icons.Filled.Home,
+                    contentDescription = "Home",
+                    tint = SafetyOrange,
+                )
+            }
+
+            IconButton(onClick = { navController.navigate(Routes.CUSTOMER_BOOKINGS) }) {
+                Icon(
+                    imageVector = Icons.Filled.CalendarMonth,
+                    contentDescription = "Calendar",
+                    tint = SafetyOrange,
+                )
+            }
+
+            IconButton(onClick = { navController.navigate(Routes.CUSTOMER_ACCOUNT) }) {
+                Icon(
+                    imageVector = Icons.Filled.Person,
+                    contentDescription = "Profile",
+                    tint = SafetyOrange,
                 )
             }
         }

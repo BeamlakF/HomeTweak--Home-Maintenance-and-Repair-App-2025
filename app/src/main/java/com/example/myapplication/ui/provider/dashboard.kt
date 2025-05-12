@@ -28,9 +28,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController // Import NavHostController
 import com.example.myapplication.R
 import com.example.myapplication.data.FakeDashboardRepo
 import com.example.myapplication.model.Dashboard
@@ -40,11 +42,14 @@ import com.example.myapplication.ui.components.CompleteDashboardCard
 import com.example.myapplication.ui.components.PendingBookingCardDetailsHidden
 import com.example.myapplication.ui.components.PendingBookingCardDetailsShown
 import com.example.myapplication.ui.components.UserProfileRatingCard
+import com.example.myapplication.ui.navigation.Routes // Import Routes
 import com.example.myapplication.viewmodel.DashboardViewModel
 import com.example.myapplication.viewmodel.DashboardViewModel.Companion.provideFactory
+import androidx.navigation.compose.rememberNavController
+
 
 @Composable
-fun DashboardScreen() {
+fun DashboardScreen(navController: NavHostController) { // Accept NavHostController
     val dashboardRepo = remember { FakeDashboardRepo() }
     val dashboardViewModel: DashboardViewModel = viewModel(factory = provideFactory(dashboardRepo))
     val profile by dashboardViewModel.profile.collectAsState()
@@ -102,7 +107,9 @@ fun DashboardScreen() {
             profile?.let {
                 UserProfileRatingCard(
                     userProfile = it,
-                    onEditProfileClick = { /* Handle edit profile Redirect to bami's ui */ },
+                    onEditProfileClick = {
+                        navController.navigate(Routes.FINISH_PROVIDER_SIGNUP) // Navigate to Provider Profile
+                    },
                 )
             }
             Spacer(modifier = Modifier.width(0.dp))
@@ -198,4 +205,10 @@ fun TabItem(title: String, isSelected: Boolean, onTabClick: (String) -> Unit) {
             )
         }
     }
+}
+@Preview(showBackground = true)
+@Composable
+fun DashboardScreenPreview() {
+    val fakeNavController = rememberNavController() // Create a mock NavController
+    DashboardScreen(navController = fakeNavController)
 }
