@@ -172,15 +172,15 @@ fun FinishSignUpScreen(
     }
 }
 
-// Preview function
-@Preview(showBackground = true)
-@Composable
-fun SignUpScreenPreview() {
-    val fakeNavController = rememberNavController()
-    FinishSignUpScreen(
-        navController = fakeNavController,
-        onSaveChanges = {  },
-        onLogout = {  },
-        onDeleteAccount = { }
-    )
-}
+//// Preview function
+//@Preview(showBackground = true)
+//@Composable
+//fun SignUpScreenPreview() {
+//    val fakeNavController = rememberNavController()
+//    FinishSignUpScreen(
+//        navController = fakeNavController,
+//        onSaveChanges = {  },
+//        onLogout = {  },
+//        onDeleteAccount = { }
+//    )
+//}
