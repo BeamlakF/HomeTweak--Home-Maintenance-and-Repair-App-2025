@@ -1,42 +1,27 @@
 package com.example.myapplication.data.remote
 
-import com.example.myapplication.utils.AuthManager
-import com.example.myapplication.data.remote.api.AuthApi
-import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.util.concurrent.TimeUnit
 
-object RetrofitInstance {
+object RetrofitClient {
+    private const val BASE_URL = "https://yourapiurl.com/" // Change this to your actual base URL
 
-    private const val BASE_URL = "http://10.62.218.119" // Use correct IP for your setup
-
-    private val authInterceptor = Interceptor { chain ->
-        val originalRequest = chain.request()
-        val token = AuthManager.token
-
-        val requestBuilder = originalRequest.newBuilder()
-        if (token != null) {
-            requestBuilder.addHeader("Authorization", "Bearer $token")
-        }
-
-        val request = requestBuilder.build()
-        chain.proceed(request)
-    }
-
-    private val client = OkHttpClient.Builder()
-        .addInterceptor(authInterceptor)
+    private val okHttpClient = OkHttpClient.Builder()
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
-    private val retrofit: Retrofit by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .client(client)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-    }
+    private val retrofit = Retrofit.Builder()
+        .baseUrl(BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
 
-    val authApi: AuthApi by lazy {
-        retrofit.create(AuthApi::class.java)
-    }
+    val bookingService: BookingService = retrofit.create(BookingService::class.java)
+    val categoryService: CategoryService = retrofit.create(CategoryService::class.java)
+    val providerService: ProviderService = retrofit.create(ProviderService::class.java)
+    val userService: UserService = retrofit.create(UserService::class.java)
 }
