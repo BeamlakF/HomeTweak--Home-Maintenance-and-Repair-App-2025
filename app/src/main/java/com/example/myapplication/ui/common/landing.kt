@@ -45,12 +45,12 @@ fun LandingPage(navController: NavHostController) {
     ) {
         Spacer(modifier = Modifier.height(50.dp))
 
-        Text(
-            text = "Find Trusted \n Home Service Provider",
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.headlineLarge,
-            color = DarkBlue,
-        )
+//        Text(
+//            text = "Find Trusted \n Home Service Provider",
+//            textAlign = TextAlign.Center,
+//            style = MaterialTheme.typography.headlineLarge,
+//            color = DarkBlue,
+//        )
 
         Text(
             text = "HomeTweak",
